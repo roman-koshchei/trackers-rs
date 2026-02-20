@@ -5,8 +5,8 @@ import cv2
 # import torch
 from rfdetr import RFDETRMedium
 
-VIDEO_PATH = "./walk.mp4"
-OUTPUT_PATH = "detections.json"
+VIDEO_PATH = "data/walk.mp4"
+OUTPUT_PATH = "data/detections.json"
 THRESHOLD = 0.5
 
 # device = "cuda" if torch.cuda.is_available() else "cpu"
