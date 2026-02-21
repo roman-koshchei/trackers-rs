@@ -1,11 +1,3 @@
-# /// script
-# requires-python = ">=3.10"
-# dependencies = [
-#   "opencv-python",
-#   "supervision",
-# ]
-# ///
-
 import json
 
 import cv2
@@ -13,8 +5,8 @@ import numpy as np
 import supervision as sv
 
 DETECTIONS_PATH = "data/detections.json"
-TRACKED_PATH = "data/tracked_rust.json"
-OUTPUT_PATH = "data/annotated_video_rust.mp4"
+TRACKED_PATH = "data/tracked_rs.json"
+OUTPUT_PATH = "data/annotated_video_rs.mp4"
 
 with open(DETECTIONS_PATH, "r") as f:
     detections_data = json.load(f)

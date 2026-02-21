@@ -10,6 +10,8 @@ pub struct ByteTrackTracker {
     track_activation_threshold: f32,
     high_conf_det_threshold: f32,
     next_tracker_id: i32,
+
+    // Buffers for memory reuse
     tracks: Vec<KalmanBoxTracker>,
     updated_detections: Vec<TrackedDetection>,
     high_conf_detections: Vec<Detection>,

@@ -155,15 +155,14 @@ fn main() -> Result<()> {
     let output_json =
         serde_json::to_string_pretty(&output_data).context("Failed to serialize output JSON")?;
 
-    fs::write("data/tracked_rust.json", &output_json)
-        .context("Failed to write tracked_rust.json")?;
+    fs::write("data/tracked_rs.json", &output_json).context("Failed to write tracked_rs.json")?;
 
-    println!("Saved tracked results to data/tracked_rust.json");
+    println!("Saved tracked results to data/tracked_rs.json");
     println!("Average tracker update time: {:.4} ms", avg_time);
 
-    println!("Comparing with Python output from data/tracked.json...");
+    println!("Comparing with Python output from data/tracked_py.json...");
 
-    let python_output = load_tracked_json("data/tracked.json")?;
+    let python_output = load_tracked_json("data/tracked_py.json")?;
 
     let matches = compare_outputs(&output_data, &python_output)?;
 

@@ -1,16 +1,12 @@
 import json
 
 import cv2
+from rfdetr.detr import RFDETRMedium
 
-# import torch
-from rfdetr import RFDETRMedium
-
-VIDEO_PATH = "data/walk.mp4"
+VIDEO_PATH = "data/video.mp4"
 OUTPUT_PATH = "data/detections.json"
 THRESHOLD = 0.5
 
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-# print(f"Using device: {device}")
 model = RFDETRMedium(device="cuda")
 model.optimize_for_inference()
 
@@ -20,7 +16,7 @@ if not cap.isOpened():
 
 detections_list = []
 frame_count = 0
-MAX_FRAMES = 110000
+MAX_FRAMES = 100000
 LOG_INTERVAL = 20
 
 while True:
