@@ -1,20 +1,12 @@
-# /// script
-# requires-python = ">=3.10"
-# dependencies = [
-#   "trackers",
-#   "supervision",
-#   "numpy",
-# ]
-# ///
-
 import json
 import time
+
 import numpy as np
 import supervision as sv
 from trackers import ByteTrackTracker
 
 INPUT_PATH = "data/detections.json"
-OUTPUT_PATH = "data/tracked.json"
+OUTPUT_PATH = "data/tracked_py.json"
 
 with open(INPUT_PATH, "r") as f:
     data = json.load(f)
@@ -53,7 +45,9 @@ for frame_idx, frame_detections in enumerate(detections_list):
     tracked_results.append(frame_tracked)
 
     if (frame_idx + 1) % 100 == 0:
-        print(f"Frame {frame_idx + 1}/{total_frames}: {len(frame_tracked)} tracked objects")
+        print(
+            f"Frame {frame_idx + 1}/{total_frames}: {len(frame_tracked)} tracked objects"
+        )
 
 avg_time = sum(update_times) / len(update_times)
 
