@@ -1,7 +1,4 @@
 use nalgebra::{DVector, OMatrix, OVector, U4, U8};
-use std::sync::atomic::{AtomicI32, Ordering};
-
-static COUNTER: AtomicI32 = AtomicI32::new(0);
 
 #[derive(Clone)]
 pub struct KalmanBoxTracker {
@@ -17,15 +14,6 @@ pub struct KalmanBoxTracker {
 }
 
 impl KalmanBoxTracker {
-    pub fn get_next_tracker_id() -> i32 {
-        COUNTER.fetch_add(1, Ordering::SeqCst)
-    }
-
-    #[allow(dead_code)]
-    pub fn reset_counter() {
-        COUNTER.store(0, Ordering::SeqCst);
-    }
-
     pub fn new(bbox: &[f32; 4]) -> Self {
         let mut state = OVector::<f32, U8>::zeros();
         state[0] = bbox[0];
@@ -39,7 +27,6 @@ impl KalmanBoxTracker {
         }
 
         let h = OMatrix::<f32, U4, U8>::identity();
-
         let q = OMatrix::<f32, U8, U8>::identity() * 0.01;
         let r = OMatrix::<f32, U4, U4>::identity() * 0.1;
         let p = OMatrix::<f32, U8, U8>::identity();
@@ -67,7 +54,7 @@ impl KalmanBoxTracker {
         self.time_since_update = 0;
         self.number_of_successful_updates += 1;
 
-        let measurement: DVector<f32> = DVector::from_vec(bbox.to_vec());
+        let measurement = DVector::<f32>::from_row_slice(bbox);
 
         let s = self.h * self.p * self.h.transpose() + self.r;
         let s_inv = s.try_inverse().expect("Failed to invert S matrix");
