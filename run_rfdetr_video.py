@@ -20,7 +20,7 @@ if not cap.isOpened():
 
 detections_list = []
 frame_count = 0
-MAX_FRAMES = 10000
+MAX_FRAMES = 110000
 LOG_INTERVAL = 20
 
 while True:

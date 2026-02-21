@@ -9,7 +9,20 @@ pub struct ByteTrackTracker {
     minimum_iou_threshold: f32,
     track_activation_threshold: f32,
     high_conf_det_threshold: f32,
+    next_tracker_id: i32,
     tracks: Vec<KalmanBoxTracker>,
+    updated_detections: Vec<TrackedDetection>,
+    high_conf_detections: Vec<Detection>,
+    low_conf_detections: Vec<Detection>,
+    high_conf_boxes: Vec<[f32; 4]>,
+    low_conf_boxes: Vec<[f32; 4]>,
+    predicted_boxes: Vec<[f32; 4]>,
+    remaining_predicted_boxes: Vec<[f32; 4]>,
+    matched_indices: Vec<(usize, usize)>,
+    matched_indices_adjusted: Vec<(usize, usize)>,
+    unmatched_track_indices: Vec<usize>,
+    unmatched_det_indices: Vec<usize>,
+    alive_indices: Vec<usize>,
 }
 
 impl ByteTrackTracker {
@@ -29,7 +42,20 @@ impl ByteTrackTracker {
             minimum_iou_threshold,
             track_activation_threshold,
             high_conf_det_threshold,
+            next_tracker_id: 0,
             tracks: Vec::new(),
+            updated_detections: Vec::new(),
+            high_conf_detections: Vec::new(),
+            low_conf_detections: Vec::new(),
+            high_conf_boxes: Vec::new(),
+            low_conf_boxes: Vec::new(),
+            predicted_boxes: Vec::new(),
+            remaining_predicted_boxes: Vec::new(),
+            matched_indices: Vec::new(),
+            matched_indices_adjusted: Vec::new(),
+            unmatched_track_indices: Vec::new(),
+            unmatched_det_indices: Vec::new(),
+            alive_indices: Vec::new(),
         }
     }
 
@@ -39,6 +65,7 @@ impl ByteTrackTracker {
         updated_detections: &mut Vec<TrackedDetection>,
         matched_indices: &[(usize, usize)],
         minimum_consecutive_frames: i32,
+        next_tracker_id: &mut i32,
     ) {
         for &(track_idx, det_idx) in matched_indices {
             let bbox = &detections[det_idx].box_coords;
@@ -47,7 +74,8 @@ impl ByteTrackTracker {
             if tracks[track_idx].number_of_successful_updates >= minimum_consecutive_frames
                 && tracks[track_idx].tracker_id == -1
             {
-                tracks[track_idx].tracker_id = KalmanBoxTracker::get_next_tracker_id();
+                tracks[track_idx].tracker_id = *next_tracker_id;
+                *next_tracker_id += 1;
             }
 
             updated_detections.push(TrackedDetection {
@@ -57,19 +85,17 @@ impl ByteTrackTracker {
         }
     }
 
-    fn split_detections(&self, detections: &[Detection]) -> (Vec<Detection>, Vec<Detection>) {
-        let mut high_conf = Vec::new();
-        let mut low_conf = Vec::new();
+    fn split_detections(&mut self, detections: &[Detection]) {
+        self.high_conf_detections.clear();
+        self.low_conf_detections.clear();
 
         for det in detections {
             if det.score >= self.high_conf_det_threshold {
-                high_conf.push(det.clone());
+                self.high_conf_detections.push(det.clone());
             } else {
-                low_conf.push(det.clone());
+                self.low_conf_detections.push(det.clone());
             }
         }
-
-        (high_conf, low_conf)
     }
 
     fn spawn_new_trackers(
@@ -77,7 +103,6 @@ impl ByteTrackTracker {
         detections: &[Detection],
         detection_boxes: &[[f32; 4]],
         unmatched_detections: &[usize],
-        updated_detections: &mut Vec<TrackedDetection>,
     ) {
         for &det_idx in unmatched_detections {
             if det_idx < detections.len() {
@@ -86,7 +111,7 @@ impl ByteTrackTracker {
                     let new_tracker = KalmanBoxTracker::new(&detection_boxes[det_idx]);
                     self.tracks.push(new_tracker);
 
-                    updated_detections.push(TrackedDetection {
+                    self.updated_detections.push(TrackedDetection {
                         box_coords: detection_boxes[det_idx],
                         tracker_id: -1,
                     });
@@ -100,106 +125,113 @@ impl ByteTrackTracker {
             return Vec::new();
         }
 
-        let mut updated_detections = Vec::new();
+        self.updated_detections.clear();
 
         for tracker in &mut self.tracks {
             tracker.predict();
         }
 
-        let (high_conf_detections, low_conf_detections) = self.split_detections(detections);
+        self.split_detections(detections);
 
-        let high_conf_boxes: Vec<[f32; 4]> =
-            high_conf_detections.iter().map(|d| d.box_coords).collect();
+        self.high_conf_boxes.clear();
+        for d in &self.high_conf_detections {
+            self.high_conf_boxes.push(d.box_coords);
+        }
 
-        let low_conf_boxes: Vec<[f32; 4]> =
-            low_conf_detections.iter().map(|d| d.box_coords).collect();
+        self.low_conf_boxes.clear();
+        for d in &self.low_conf_detections {
+            self.low_conf_boxes.push(d.box_coords);
+        }
 
-        let predicted_boxes: Vec<[f32; 4]> =
-            self.tracks.iter().map(|t| t.get_state_bbox()).collect();
+        self.predicted_boxes.clear();
+        for t in &self.tracks {
+            self.predicted_boxes.push(t.get_state_bbox());
+        }
 
-        let (matched_indices, unmatched_track_indices, unmatched_det_indices) =
-            if !high_conf_boxes.is_empty() && !predicted_boxes.is_empty() {
-                let iou_matrix = compute_iou_batch(&predicted_boxes, &high_conf_boxes);
-                get_associated_indices(&iou_matrix, self.minimum_iou_threshold)
+        self.matched_indices.clear();
+        self.unmatched_track_indices.clear();
+        self.unmatched_det_indices.clear();
+
+        if !self.high_conf_boxes.is_empty() && !self.predicted_boxes.is_empty() {
+            let iou_matrix = compute_iou_batch(&self.predicted_boxes, &self.high_conf_boxes);
+            let (matched, unmatched_tracks, unmatched_dets) =
+                get_associated_indices(&iou_matrix, self.minimum_iou_threshold);
+            self.matched_indices = matched;
+            self.unmatched_track_indices = unmatched_tracks;
+            self.unmatched_det_indices = unmatched_dets;
+        } else {
+            self.unmatched_track_indices.extend(0..self.tracks.len());
+            self.unmatched_det_indices
+                .extend(0..self.high_conf_boxes.len());
+        }
+
+        Self::update_detections(
+            &mut self.tracks,
+            &self.high_conf_detections,
+            &mut self.updated_detections,
+            &self.matched_indices,
+            self.minimum_consecutive_frames,
+            &mut self.next_tracker_id,
+        );
+
+        self.remaining_predicted_boxes.clear();
+        for &idx in &self.unmatched_track_indices {
+            self.remaining_predicted_boxes
+                .push(self.predicted_boxes[idx]);
+        }
+
+        self.matched_indices_adjusted.clear();
+        let unmatched_det_indices2 =
+            if !self.low_conf_boxes.is_empty() && !self.remaining_predicted_boxes.is_empty() {
+                let iou_matrix =
+                    compute_iou_batch(&self.remaining_predicted_boxes, &self.low_conf_boxes);
+                let (matched2, _, unmatched_dets2) =
+                    get_associated_indices(&iou_matrix, self.minimum_iou_threshold);
+                for &(i, j) in &matched2 {
+                    self.matched_indices_adjusted
+                        .push((self.unmatched_track_indices[i], j));
+                }
+                unmatched_dets2
             } else {
-                (
-                    Vec::new(),
-                    (0..self.tracks.len()).collect(),
-                    (0..high_conf_boxes.len()).collect(),
-                )
+                (0..self.low_conf_boxes.len()).collect()
             };
 
         Self::update_detections(
             &mut self.tracks,
-            &high_conf_detections,
-            &mut updated_detections,
-            &matched_indices,
+            &self.low_conf_detections,
+            &mut self.updated_detections,
+            &self.matched_indices_adjusted,
             self.minimum_consecutive_frames,
+            &mut self.next_tracker_id,
         );
 
-        let remaining_track_indices: Vec<usize> = unmatched_track_indices;
-
-        let (matched_indices2, _unmatched_track_indices2, unmatched_det_indices2) =
-            if !low_conf_boxes.is_empty() && !remaining_track_indices.is_empty() {
-                let remaining_predicted_boxes: Vec<[f32; 4]> = remaining_track_indices
-                    .iter()
-                    .map(|&idx| predicted_boxes[idx])
-                    .collect();
-
-                let iou_matrix = compute_iou_batch(&remaining_predicted_boxes, &low_conf_boxes);
-                get_associated_indices(&iou_matrix, self.minimum_iou_threshold)
-            } else {
-                (
-                    Vec::new(),
-                    (0..remaining_track_indices.len()).collect(),
-                    (0..low_conf_boxes.len()).collect(),
-                )
-            };
-
-        let matched_indices2_adjusted: Vec<(usize, usize)> = matched_indices2
-            .iter()
-            .map(|&(i, j)| (remaining_track_indices[i], j))
-            .collect::<Vec<_>>();
-
-        Self::update_detections(
-            &mut self.tracks,
-            &low_conf_detections,
-            &mut updated_detections,
-            &matched_indices2_adjusted,
-            self.minimum_consecutive_frames,
-        );
-
-        for det_idx in unmatched_det_indices2 {
-            updated_detections.push(TrackedDetection {
-                box_coords: low_conf_boxes[det_idx],
+        for &det_idx in &unmatched_det_indices2 {
+            self.updated_detections.push(TrackedDetection {
+                box_coords: self.low_conf_boxes[det_idx],
                 tracker_id: -1,
             });
         }
 
-        self.spawn_new_trackers(
-            &high_conf_detections,
-            &high_conf_boxes,
-            &unmatched_det_indices,
-            &mut updated_detections,
-        );
+        let high_conf_dets = self.high_conf_detections.clone();
+        let high_conf_bxs = self.high_conf_boxes.clone();
+        let unmatched_dets = self.unmatched_det_indices.clone();
+        self.spawn_new_trackers(&high_conf_dets, &high_conf_bxs, &unmatched_dets);
 
-        let alive_indices: Vec<usize> = get_alive_trackers(
+        self.alive_indices.clear();
+        let alive = get_alive_trackers(
             &self.tracks,
             self.minimum_consecutive_frames,
             self.maximum_frames_without_update,
         );
+        self.alive_indices.extend(alive);
 
-        self.tracks = alive_indices
-            .into_iter()
-            .map(|i| self.tracks[i].clone())
+        let new_tracks: Vec<KalmanBoxTracker> = self
+            .alive_indices
+            .iter()
+            .map(|&i| self.tracks[i].clone())
             .collect();
+        self.tracks = new_tracks;
 
-        updated_detections
-    }
-
-    #[allow(dead_code)]
-    pub fn reset(&mut self) {
-        self.tracks.clear();
-        KalmanBoxTracker::reset_counter();
+        std::mem::take(&mut self.updated_detections)
     }
 }

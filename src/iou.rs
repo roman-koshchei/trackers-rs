@@ -11,10 +11,8 @@ pub fn compute_iou(box1: &[f32; 4], box2: &[f32; 4]) -> f32 {
     }
 
     let inter_area = (x2_inter - x1_inter) * (y2_inter - y1_inter);
-
     let box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1]);
     let box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1]);
-
     let union_area = box1_area + box2_area - inter_area;
 
     if union_area <= 0.0 {
