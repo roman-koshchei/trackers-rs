@@ -7,13 +7,14 @@
 # ///
 
 import json
-import numpy as np
+
 import cv2
+import numpy as np
 import supervision as sv
 
-DETECTIONS_PATH = "detections.json"
-TRACKED_PATH = "tracked.json"
-OUTPUT_PATH = "annotated_video.mp4"
+DETECTIONS_PATH = "data/detections.json"
+TRACKED_PATH = "data/tracked_rust.json"
+OUTPUT_PATH = "data/annotated_video_rust.mp4"
 
 with open(DETECTIONS_PATH, "r") as f:
     detections_data = json.load(f)
@@ -49,7 +50,9 @@ for frame_idx in range(total_frames):
 
         if tracked_detections:
             xyxy = np.array([d["box"] for d in tracked_detections], dtype=np.float32)
-            tracker_id = np.array([d["tracker_id"] for d in tracked_detections], dtype=int)
+            tracker_id = np.array(
+                [d["tracker_id"] for d in tracked_detections], dtype=int
+            )
             labels = [f"ID: {tid}" for tid in tracker_id]
 
             detections = sv.Detections(
@@ -58,7 +61,9 @@ for frame_idx in range(total_frames):
             )
 
             annotated_frame = box_annotator.annotate(frame, detections)
-            annotated_frame = label_annotator.annotate(annotated_frame, detections, labels=labels)
+            annotated_frame = label_annotator.annotate(
+                annotated_frame, detections, labels=labels
+            )
         else:
             annotated_frame = frame
     else:
