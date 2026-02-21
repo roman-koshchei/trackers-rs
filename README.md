@@ -14,7 +14,7 @@ These are lovely projects and reason why LLM could accomplish the port.
 
 Providing LLM a way to test Rust implementation, so it could reach correctness.
 
-In `scripts` folder there is script `run_rfdetr.py` which run RF-DERT object detection model on video frames and saves results to the `data/detections.json` file, so we can cache detection results.
+In `scripts` folder there is script `run_rfdetr.py` which run RF-DETR object detection model on video frames and saves results to the `data/detections.json` file, so we can cache detection results.
 
 Then there is `run_bytetrack.py` which runs correct Python ByteTrack implentation on the `detections.js` and outputs tracked results into `tracked_py.json` file.
 
