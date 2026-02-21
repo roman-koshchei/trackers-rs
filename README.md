@@ -2,7 +2,7 @@
 
 Goal of the project is to port ByteTrack tracker to Rust programing language (using LLM) and test it's correctness.
 
-In the `reference` folder can be found Python implmentation for next components:
+In the `reference` folder can be found Python projects that implement next components:
 
 - [trackers](https://github.com/roboflow/trackers) for the ByteTrackTracker itself.
 - [supervision](https://github.com/roboflow/supervision) for Detections struct on which `trackers` depend.
