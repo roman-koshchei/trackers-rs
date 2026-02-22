@@ -56,7 +56,7 @@ On my laptop with _100000_ frames from Tokyo walk video (good amount of detected
 | Rust     | 0.00201                             |
 
 Not only Rust implementation results are same as Python implementation's.
-But, we also go _125x_ faster execution.
+But, we also got _125x_ faster execution.
 Even if there is some inconsistencies during execution of these two implementation,
 the gap is so big you can't deny that Rust implementation is faster.
 
