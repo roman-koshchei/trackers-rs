@@ -6,6 +6,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "opencv-python>=4.13.0.92",
+]
+
+[project.optional-dependencies]
+detection = [
     "rfdetr>=1.6.5.post0",
     "torch>=2.6.0",
 ]

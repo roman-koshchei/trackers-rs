@@ -12,4 +12,4 @@ As a reference we use next project which are added as git submodules for referen
 
 ## Initial testing setup
 
-First we ran generic RF-DETR model to detect object on random town walk video I have found. Detections are saved in `data/detections.json` file for future runs of trackers on these detections and single point of comparision.
+First we `uv run scripts/run_rfdetr.py` generic RF-DETR model to detect object on random town walk video I have found. Detections are saved in `data/detections.json` file for future runs of trackers on these detections and single point of comparision.

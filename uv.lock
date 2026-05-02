@@ -1528,6 +1528,10 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "opencv-python" },
+]
+
+[package.optional-dependencies]
+detection = [
     { name = "rfdetr" },
     { name = "torch" },
 ]
@@ -1535,9 +1539,10 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "opencv-python", specifier = ">=4.13.0.92" },
-    { name = "rfdetr", specifier = ">=1.6.5.post0" },
-    { name = "torch", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/cu124" },
+    { name = "rfdetr", marker = "extra == 'detection'", specifier = ">=1.6.5.post0" },
+    { name = "torch", marker = "extra == 'detection'", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/cu124" },
 ]
+provides-extras = ["detection"]
 
 [[package]]
 name = "transformers"
