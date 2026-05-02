@@ -1,0 +1,9 @@
+[submodule "reference/trackers"]
+	path = reference/trackers
+	url = https://github.com/roboflow/trackers
+[submodule "reference/supervision"]
+	path = reference/supervision
+	url = https://github.com/roboflow/supervision
+[submodule "reference/scipy"]
+	path = reference/scipy
+	url = https://github.com/scipy/scipy
