@@ -1523,11 +1523,31 @@ wheels = [
 ]
 
 [[package]]
+name = "trackers"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "opencv-python" },
+    { name = "requests" },
+    { name = "rich" },
+    { name = "scipy" },
+    { name = "supervision" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/28/14/50ab14fe581fceb636e7ae3e5374b88104c19ea987897b4c376e823ffed4/trackers-2.3.0.tar.gz", hash = "sha256:7becdc77d32c59ee37ec7bc450641cd6c76abcfce69de97f94f77e1e0764a1ea", size = 351380, upload-time = "2026-03-16T14:12:43.861Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/23/98/414d7b49c266a2db2a703c71b81d659cf6e3020e137cbdb9ba1738f58ff0/trackers-2.3.0-py3-none-any.whl", hash = "sha256:4e06ff1910d2ca0a54cd10b854bca44aee5f421a1766667adb5ca919d15bbf75", size = 96475, upload-time = "2026-03-16T14:12:42.41Z" },
+]
+
+[[package]]
 name = "trackers-rs"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "numpy" },
     { name = "opencv-python" },
+    { name = "supervision" },
+    { name = "trackers" },
 ]
 
 [package.optional-dependencies]
@@ -1538,9 +1558,12 @@ detection = [
 
 [package.metadata]
 requires-dist = [
+    { name = "numpy", specifier = ">=2.4.4" },
     { name = "opencv-python", specifier = ">=4.13.0.92" },
     { name = "rfdetr", marker = "extra == 'detection'", specifier = ">=1.6.5.post0" },
+    { name = "supervision", specifier = ">=0.27.0.post2" },
     { name = "torch", marker = "extra == 'detection'", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/cu124" },
+    { name = "trackers", specifier = ">=2.3.0" },
 ]
 provides-extras = ["detection"]
 
