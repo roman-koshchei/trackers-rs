@@ -1,15 +1,7 @@
 use crate::detection::{Detection, TrackedDetection};
-
-#[path = "hungarian.rs"]
-mod hungarian;
-#[path = "iou.rs"]
-mod iou;
-#[path = "kalman.rs"]
-mod kalman;
-
-use hungarian::linear_sum_assignment;
-use iou::compute_iou_batch;
-use kalman::KalmanBoxTracker;
+use crate::hungarian::linear_sum_assignment;
+use crate::iou::compute_iou_batch;
+use crate::kalman::KalmanBoxTracker;
 
 struct DetGroup {
     boxes: Vec<[f32; 4]>,
@@ -65,11 +57,7 @@ pub struct ByteTrackTracker {
 }
 
 impl ByteTrackTracker {
-    pub fn new() -> Self {
-        Self::with_config(30, 30.0, 0.7, 2, 0.1, 0.6)
-    }
-
-    fn with_config(
+    pub fn new(
         lost_track_buffer: i32,
         frame_rate: f32,
         track_activation_threshold: f32,

@@ -1,4 +1,7 @@
 mod detection;
+mod hungarian;
+mod iou;
+mod kalman;
 mod tracker;
 
 use anyhow::{Context, Result};
@@ -18,7 +21,14 @@ fn main() -> Result<()> {
     println!("Total frames: {}", input_data.total_frames);
     println!("Processing frames with ByteTrack...");
 
-    let mut tracker = ByteTrackTracker::new();
+    let mut tracker = ByteTrackTracker::new(
+        30,   // lost_track_buffer
+        30.0, // frame_rate
+        0.25, // track_activation_threshold
+        2,    // minimum_consecutive_frames
+        0.1,  // minimum_iou_threshold
+        0.6,  // high_conf_det_threshold
+    );
 
     let mut tracked_results = Vec::new();
     let mut update_times = Vec::new();
