@@ -1,4 +1,5 @@
 pub mod detection;
+pub mod hungarian;
 pub mod tracker;
 pub mod iou;
 
